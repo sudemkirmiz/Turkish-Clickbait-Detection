@@ -29,47 +29,55 @@ Sistem, haber başlıklarını analiz eder ve metin madenciliği yöntemlerini k
 
 ## ⚙️ Kurulum ve Çalıştırma
 
-Projeyi yerel bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin:
+Projeyi yerel bilgisayarınızda çalıştırmak için aşağıdaki adımları sırasıyla izleyin:
 
-**1. Projeyi Klonlayın**
+**1. Projeyi Bilgisayarınıza İndirin (Clone)**
+Terminali açın ve aşağıdaki komutu yazarak projeyi bilgisayarınıza çekin:
 ```bash
 git clone [https://github.com/sudemkirmiz/Turkish-Clickbait-Detection.git](https://github.com/sudemkirmiz/Turkish-Clickbait-Detection.git)
 cd Turkish-Clickbait-Detection
-
-**2. Gerekli Kütüphaneleri Yükleyin**
+```
+**2. Sanal Ortamı Oluşturun (Önerilen) Kütüphanelerin çakışmaması için sanal ortam (virtual environment) oluşturmanız tavsiye edilir:**
+```bash
+# Windows için:
+python -m venv venv
+.\venv\Scripts\activate
+```
+```bash
+# Mac/Linux için:
+python3 -m venv venv
+source venv/bin/activate
+```
+**3. Gerekli Kütüphaneleri Yükleyin Projenin çalışması için gereken paketleri yükleyin:**
 ```bash
 pip install -r requirements.txt
 ```
-
-**3. Uygulamayı Çalıştırın**
+**4. Uygulamayı Çalıştırın Kurulum tamamlandıktan sonra projeyi başlatın:**
 ```bash
 python main.py
 ```
 
-🧠 Nasıl Çalışır? (İş Akışı)
+## 🧠 Nasıl Çalışır? (İş Akışı)
+
 Proje, ham metni alıp tahmin üretmek için şu boru hattını (pipeline) izler:
 
-Veri Yükleme: Örnek haber başlıkları ve etiketleri yüklenir.
-
-Ön İşleme (Preprocessing):
-
-Küçük harfe çevirme.
-
-Noktalama işaretlerini kaldırma.
-
-Etkisiz kelimeleri (Stop Words) temizleme.
-
-Stemming: Kelimeleri köküne indirgeme (TurkishStemmer ile).
-
-Vektörleştirme: Metinler TF-IDF yöntemiyle sayısal vektörlere dönüştürülür.
-
-Model Eğitimi: Multinomial Naive Bayes algoritması ile model eğitilir.
-
-Tahmin: Yeni gelen başlık analiz edilir.
+1. **Veri Yükleme:** Örnek haber başlıkları ve etiketleri yüklenir.
+2. **Ön İşleme (Preprocessing):**
+   * Küçük harfe çevirme.
+   * Noktalama işaretlerini kaldırma.
+   * Etkisiz kelimeleri (Stop Words) temizleme.
+   * **Stemming:** Kelimeleri köküne indirgeme (`TurkishStemmer` ile).
+3. **Vektörleştirme:** Metinler `TF-IDF` yöntemiyle sayısal vektörlere dönüştürülür.
+4. **Model Eğitimi:** `Multinomial Naive Bayes` algoritması ile model eğitilir.
+5. **Tahmin:** Yeni gelen başlık analiz edilir.
 
 ## 📊 Sonuçlar ve Örnekler
 
 Model, genişletilmiş veri seti ve Türkçe kök bulma (stemming) işlemi sayesinde zorlu örnekleri başarıyla ayırt edebilmektedir.
+
+Aşağıdaki görselde, modelin **Clickbait (Kırmızı)** ve **Normal (Mavi)** haberlerde en sık rastladığı kelimelerin dağılımını görebilirsiniz:
+
+![Kelime Bulutu Analizi](assets/wordcloud.png)
 
 Aşağıda modelin test kümesinden ve gerçek hayat senaryolarından elde ettiği bazı tahminler yer almaktadır:
 
@@ -83,11 +91,15 @@ Aşağıda modelin test kümesinden ve gerçek hayat senaryolarından elde etti�
 
 > **Not:** Modelin doğruluk oranı (Accuracy) test veri setinde **%87.5** olarak ölçülmüştür.
 
-📂 Klasör Yapısı
+## 📂 Klasör Yapısı
+
+```text
 Turkish-Clickbait-Detection/
+├── assets/
+│   └── wordcloud.png    # Proje çıktısı (Kelime Bulutu görseli)
 ├── main.py              # Projenin ana kaynak kodu
 ├── requirements.txt     # Gerekli kütüphane listesi
 ├── .gitignore           # Gereksiz dosyaların yüklenmesini engeller
 └── README.md            # Proje dokümantasyonu
-
-Geliştirici: Sudem Kırmız. Bu proje NLP öğrenim sürecimin bir parçası olarak geliştirilmiştir
+```
+>Geliştirici: Sudem Kırmız. Bu proje NLP öğrenim sürecimin bir parçası olarak geliştirilmiştir
