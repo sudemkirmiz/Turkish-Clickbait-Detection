@@ -1,0 +1,14 @@
+# Python sanal ortam klasörü (Çok ağırdır, yüklenmez)
+venv/
+env/
+.env
+
+# Python derleme dosyaları (Gereksizdir)
+__pycache__/
+*.pyc
+
+# VS Code ayar dosyaları (Kişiseldir)
+.vscode/
+
+# Mac kullanıyorsan oluşan sistem dosyaları
+.DS_Store
