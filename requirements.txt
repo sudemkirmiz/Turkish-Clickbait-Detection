@@ -1,6 +1,7 @@
 pandas
-nltk
+numpy
 scikit-learn
-matplotlib
-wordcloud
+nltk
 TurkishStemmer
+matplotlib
+seaborn

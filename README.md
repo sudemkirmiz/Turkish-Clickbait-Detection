@@ -2,30 +2,30 @@
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![NLP](https://img.shields.io/badge/NLP-Natural_Language_Processing-green.svg)
-![Status](https://img.shields.io/badge/Status-Completed-success.svg)
+![Algorithm](https://img.shields.io/badge/Model-Logistic_Regression-orange.svg)
+![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
 ## 📌 Proje Tanımı
-Bu proje, Türkçe haber sitelerinde ve sosyal medyada sıkça karşılaşılan **"Clickbait" (Tık Tuzağı)** başlıklarını tespit etmek amacıyla geliştirilmiş bir **Makine Öğrenmesi (Machine Learning)** uygulamasıdır. 
+Bu proje, Türkçe haber sitelerinde, sosyal medyada ve video platformlarında sıkça karşılaşılan **"Clickbait" (Tık Tuzağı)** başlıklarını tespit etmek amacıyla geliştirilmiş ileri seviye bir **Doğal Dil İşleme (NLP)** projesidir.
 
-Sistem, haber başlıklarını analiz eder ve metin madenciliği yöntemlerini kullanarak başlığın okuyucuyu kandırmaya yönelik olup olmadığını (**CLICKBAIT** veya **NORMAL**) sınıflandırır.
+Sistemin önceki versiyonlarından en büyük farkı; sadece kelimelere değil, **cümlenin bağlamına (context)**, **kelime öbeklerine (n-grams)** ve **noktalama işaretlerinin kullanım şekline** (Örn: "!!!", "...") odaklanmasıdır. Model, bir dedektif gibi davranarak hem dil bilgisel hem de görsel ipuçlarını analiz eder.
 
-## ✨ Temel Özellikler
-* **Türkçe Doğal Dil İşleme:** Türkçe'nin yapısına uygun metin işleme süreçleri.
-* **Gelişmiş Kök Bulma (Stemming):** `TurkishStemmer` kütüphanesi kullanılarak kelimeler köklerine indirgenir (Örn: *"yapıldı", "yapıyor", "yapacak"* -> **"yap"**).
-* **TF-IDF Vektörleştirme:** Kelimelerin önem derecesini matematiksel ağırlıklarla belirleme.
-* **Kelime Bulutu (Word Cloud):** Clickbait ve Normal haberlerde en çok geçen kelimeleri görselleştirme.
-* **Yüksek Doğruluk:** Stratified Sampling ve genişletilmiş veri seti ile **~%87.5** doğruluk oranı.
+## ✨ Temel Özellikler (YENİ)
+* **🕵️‍♀️ Akıllı Noktalama Analizi:** Standart NLP süreçlerinin aksine, bu model noktalama işaretlerini silmez. Ünlem (`!`), üç nokta (`...`) ve soru işaretlerini (`?`) birer "duygu belirteci" olarak analiz eder.
+* **🔗 N-Gram Analizi (1-3):** Kelimelere tek tek bakmak yerine 3'lü gruplar halinde bakar. (Örn: *"Şok"* kelimesi yerine *"Şok şok şok"* kalıbını ayırt eder).
+* **🇹🇷 Türkçe Stemming:** `TurkishStemmer` ile kelimeler köklerine indirgenir ancak özel kalıplar ve noktalama işaretleri korunur.
+* **🧠 Logistic Regression:** Olasılık tabanlı sınıflandırma ile daha kararlı sonuçlar üretir (`predict_proba` yeteneği sayesinde güven skoru verir).
+* **📊 Görsel Analiz:** Modelin performansını ölçmek için **Confusion Matrix (Hata Matrisi)** ısı haritası oluşturur.
 
 ## 🧰 Kullanılan Teknolojiler ve Kütüphaneler
 
 | Teknoloji | Amaç |
 |---|---|
 | **Python** | Ana programlama dili |
-| **Scikit-learn** | Makine öğrenmesi (Naive Bayes, TF-IDF, Split) |
+| **Scikit-learn** | Makine öğrenmesi (Logistic Regression, TF-IDF, Metrics) |
 | **NLTK** | Metin ön işleme (Tokenization, Stopwords) |
 | **TurkishStemmer** | Türkçe kelime köklerini bulma |
 | **Pandas** | Veri manipülasyonu ve yönetimi |
-| **WordCloud** | Veri görselleştirme |
 
 ## ⚙️ Kurulum ve Çalıştırma
 
@@ -51,45 +51,44 @@ source venv/bin/activate
 **3. Gerekli Kütüphaneleri Yükleyin Projenin çalışması için gereken paketleri yükleyin:**
 ```bash
 pip install -r requirements.txt
+# Veya manuel olarak:
+pip install pandas numpy nltk TurkishStemmer scikit-learn
 ```
 **4. Uygulamayı Çalıştırın Kurulum tamamlandıktan sonra projeyi başlatın:**
 ```bash
 python main.py
 ```
 
-## 🧠 Nasıl Çalışır? (İş Akışı)
+## 🧠 Nasıl Çalışır? (Teknik İş Akışı)
 
-Proje, ham metni alıp tahmin üretmek için şu boru hattını (pipeline) izler:
+Proje, metni ham halden alıp sonuca ulaştırmak için aşağıdaki "Pipeline" (Boru Hattı) adımlarını izler:
 
-1. **Veri Yükleme:** Örnek haber başlıkları ve etiketleri yüklenir.
-2. **Ön İşleme (Preprocessing):**
-   * Küçük harfe çevirme.
-   * Noktalama işaretlerini kaldırma.
-   * Etkisiz kelimeleri (Stop Words) temizleme.
-   * **Stemming:** Kelimeleri köküne indirgeme (`TurkishStemmer` ile).
-3. **Vektörleştirme:** Metinler `TF-IDF` yöntemiyle sayısal vektörlere dönüştürülür.
-4. **Model Eğitimi:** `Multinomial Naive Bayes` algoritması ile model eğitilir.
-5. **Tahmin:** Yeni gelen başlık analiz edilir.
+1.  **Veri Yükleme:** `clickbait_dataset.csv` dosyasından haber başlıkları ve etiketleri (0: Normal, 1: Clickbait) yüklenir.
+2.  **Akıllı Ön İşleme (Smart Preprocessing):**
+    * Metin küçük harfe çevrilir.
+    * Etkisiz kelimeler (Stop Words) temizlenir.
+    * **ÖNEMLİ:** Standart temizliğin aksine, ünlem (`!`), soru işareti (`?`) ve üç nokta (`...`) **silinmez**, korunur.
+    * Kelimeler `TurkishStemmer` ile köklerine indirgenir.
+3.  **Vektörleştirme (TF-IDF):**
+    * Metinler matematiksel vektörlere dönüştürülür.
+    * `token_pattern=r'(?u)\S+'` ayarı ile noktalama işaretleri de birer kelime gibi işlenir.
+    * `ngram_range=(1, 3)` kullanılarak kelime grupları (Örn: "şok şok şok") analiz edilir.
+4.  **Model Eğitimi:** `Logistic Regression` algoritması, verideki bu desenleri ve olasılıkları öğrenir.
+5.  **Canlı Test:** Kullanıcıdan alınan metin aynı işlemlerden geçirilip % (yüzde) olasılık skoru ile değerlendirilir.
 
-## 📊 Sonuçlar ve Örnekler
+## 📊 Örnek Senaryolar
 
-Model, genişletilmiş veri seti ve Türkçe kök bulma (stemming) işlemi sayesinde zorlu örnekleri başarıyla ayırt edebilmektedir.
+Yeni modelin "noktalama duyarlılığı" ve "bağlam analizi" sayesinde yakaladığı bazı kritik farklar aşağıdadır:
 
-Aşağıdaki görselde, modelin **Clickbait (Kırmızı)** ve **Normal (Mavi)** haberlerde en sık rastladığı kelimelerin dağılımını görebilirsiniz:
-
-![Kelime Bulutu Analizi](assets/wordcloud.png)
-
-Aşağıda modelin test kümesinden ve gerçek hayat senaryolarından elde ettiği bazı tahminler yer almaktadır:
-
-| Haber Başlığı | Tahmin | Durum |
+| Haber Başlığı | Tahmin | Neden? |
 |---|---|---|
-| *"Doktorlar bu kürü öneriyor, hemen deneyin!"* | 🔴 **CLICKBAIT** | ✅ Başarılı |
-| *"Belediye otobüs sefer saatlerinde düzenleme yaptı."* | 🔵 **NORMAL** | ✅ Başarılı |
-| *"Flaş flaş! Görenler gözlerine inanamadı."* | 🔴 **CLICKBAIT** | ✅ Başarılı |
-| *"Merkez Bankası faiz kararını açıkladı."* | 🔵 **NORMAL** | ✅ Başarılı |
-| *"Sakın bu meyveyi kabuğuyla yemeyin!"* | 🔴 **CLICKBAIT** | ✅ Başarılı |
+| *"Doktorlar bu kürü öneriyor..."* | 🔴 **CLICKBAIT** | "Bu kür" kelimesi ve "..." (merak boşluğu) kullanımı tespit edildi. |
+| *"Böyle kar görülmedi!!"* | 🔴 **CLICKBAIT** | Aşırı ünlem (`!!`) kullanımı yapay heyecan olarak algılandı. |
+| *"Böyle kar görülmedi"* | 🔵 **NORMAL** | Aynı cümle, noktalama normal olduğu için güvenli bulundu. |
+| *"Merkez Bankası faiz kararını açıkladı."* | 🔵 **NORMAL** | Bilgi verici, duygusal manipülasyon yok. |
+| *"Sakın çöpe atmayın! Meğer..."* | 🔴 **CLICKBAIT** | "Sakın", "Meğer" kelimeleri ve ünlem kombinasyonu yakalandı. |
 
-> **Not:** Modelin doğruluk oranı (Accuracy) test veri setinde **%87.5** olarak ölçülmüştür.
+> **Not:** Model, %65 ve üzeri olasılık değerlerini "Clickbait" olarak işaretleyecek şekilde hassas ayarlanmıştır.
 
 ## 📂 Klasör Yapısı
 

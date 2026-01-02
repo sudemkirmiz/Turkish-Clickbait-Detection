@@ -1,164 +1,146 @@
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns  # Grafikler için
+import string 
+
+# NLP Kütüphaneleri
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from nltk.stem import SnowballStemmer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
 from TurkishStemmer import TurkishStemmer
 
-# Gerekli NLTK paketleri
-nltk.download('punkt')
-nltk.download('punkt_tab')
-nltk.download('stopwords')
+# Makine Öğrenmesi (Scikit-Learn)
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression  # Daha kararlı algoritma
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
-# --- ADIM 1: GÜÇLENDİRİLMİŞ VERİ SETİ (V2) ---
-data = {
-    'baslik': [
-        # --- CLICKBAIT (20 Adet) ---
-        "Bu yöntemi deneyenler gözlerine inanamadı!",
-        "Sakın bu meyveyi kabuğuyla yemeyin!",
-        "Ünlü oyuncunun son hali görenleri şok etti.",
-        "Hayatınızı değiştirecek 5 mucizevi ipucu.",
-        "Bunu yapmayan pişman oluyor hemen tıklayın!",
-        "Ayrılık iddiası ortalığı karıştırdı, bakın kimmiş!",
-        "Sosyal medya bu görüntüyü konuşuyor, skandal!",
-        "Duyanlar kulaklarına inanamadı, dehşet verici olay.",
-        "Zayıflamak isteyenler buraya, 3 günde 5 kilo!",
-        "Flaş flaş flaş! O isim istifa etti.",
-        "Kimsenin bilmediği sır ortaya çıktı.",
-        "Bakın o ünlü isim aslında nereliymiş!",
-        "Yürekleri ağza getiren anlar, saniye saniye kaydedildi.",
-        "Uzmanlar uyardı: Sakın çöpe atmayın!",
-        "Görenler dönüp bir daha baktı, inanılmaz değişim.",
-        "Doktorlar bu kürü öneriyor, hemen deneyin!",
-        "Mucize kurtuluş! İzleyenler dondu kaldı.",
-        "Olay yerinden ilk görüntüler, kan dondurdu.",
-        "Herkes bu sorunun cevabını merak ediyor.",
-        "Paranız cebinizde kalsın, işte bedava yöntem.",
-        
-        # --- NORMAL HABER (20 Adet) ---
-        "Merkez Bankası faiz kararını yarın açıklayacak.",
-        "İstanbul'da yarın sağanak yağış bekleniyor.",
-        "Fenerbahçe derbi hazırlıklarını tamamladı.",
-        "Eğitim bakanlığı yeni müfredatı duyurdu.",
-        "Dolar kuru haftaya yatay seyirle başladı.",
-        "Belediye ekipleri asfalt çalışmalarına devam ediyor.",
-        "Otobüs ve metro sefer saatlerinde düzenleme yapıldı.",
-        "Cumhurbaşkanı kabine toplantısı sonrası konuştu.",
-        "Süper Lig'de bu hafta oynanacak maçların hakemleri belli oldu.",
-        "Sağlık bakanlığı günlük koronavirüs tablosunu paylaştı.",
-        "Milli takım teknik direktörü basın toplantısı düzenledi.",
-        "Benzin ve motorin fiyatlarına bu gece zam geliyor.",
-        "Üniversite sınav sonuçları erişime açıldı.",
-        "İzmir'de 4.2 büyüklüğünde deprem meydana geldi.",
-        "Turizm gelirleri geçen yıla göre yüzde 20 arttı.",
-        "Meteoroloji uyardı: Kar yağışı geliyor.",
-        "Altın fiyatları güne yükselişle başladı.",
-        "Meclis yeni yasama yılına başladı.",
-        "Trafik kazasında 3 kişi yaralandı.",
-        "Şehir hastanesi hasta kabulüne başladı."
-    ],
-    'etiket': ['CLICKBAIT'] * 20 + ['NORMAL'] * 20 # 20 tane Clickbait, 20 tane Normal
-}
-df = pd.DataFrame(data)
+# Gerekli indirmeler (Sadece ilk çalışmada indirir)
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
 
-# --- ADIM 2: PREPROCESSING (Ön İşleme) ---
+# 1. ADIM: VERİ HAZIRLIĞI VE YÜKLEME
+print("\n 1. Veri seti yükleniyor...")
 
-def metin_on_isleme(metin):
-    # 1. Küçük harfe çevir
-    metin = metin.lower()
+dosya_adi = 'clickbait_dataset.csv'
+
+try:
+    df = pd.read_csv(dosya_adi)
+    # Etiketleri Sayısal Hale Getirelim (Eğer metinse) veya tam tersi
+    # Bizim CSV'de 1 ve 0 var. 1=Clickbait, 0=Normal
+    print(f"Başarılı! Toplam {len(df)} satır veri okundu.")
     
-    # 2. Tokenization
+    # Veri setinde boş veri var mı kontrol et ve temizle
+    if df.isnull().sum().any():
+        print("Boş satırlar bulundu, temizleniyor...")
+        df = df.dropna()
+        
+except FileNotFoundError:
+    print(f"HATA: '{dosya_adi}' bulunamadı! Lütfen önce veri üretici kodunu çalıştırın.")
+    exit()
+
+# 2. ADIM: METİN ÖN İŞLEME FONKSİYONU
+print("2. Metinler temizleniyor (Stemming & Stopwords)...")
+
+stop_words = set(stopwords.words('turkish'))
+stemmer = TurkishStemmer()
+
+def metni_temizle(metin):
+    """
+    Noktalama işaretlerini koruyarak temizlik yapar.
+    Clickbait'ler genelde '!' ve '...' kullanır, bunları atmamalıyız.
+    """
+    metin = str(metin).lower()
+    
+    # Kelimelere ayır
     kelimeler = word_tokenize(metin)
     
-    # 3. Stop Words
-    stop_words = set(stopwords.words('turkish'))
-    
-    # 4. STEMMING TANIMLAMASI
-    # Bilgisayara "stemmer"ın ne olduğunu burada söylüyoruz:
-    stemmer = TurkishStemmer()
     temiz_kelimeler = []
     for kelime in kelimeler:
-        if kelime.isalpha() and kelime not in stop_words:
-            # Kelimenin kökünü buluyoruz (örn: 'yaptı' -> 'yap')
-            kok = stemmer.stem(kelime)
-            temiz_kelimeler.append(kok)
+        # Stop words temizliği yapalım ama noktalama işaretlerini KORUYALIM
+        # isalpha() yerine, noktalama işaretiyse DE ekle diyoruz.
+        if (kelime.isalpha() or kelime in string.punctuation) and kelime not in stop_words:
+            try:
+                # Sadece harf ise kök bul, noktalama ise dokunma
+                if kelime.isalpha():
+                    kok = stemmer.stem(kelime)
+                    temiz_kelimeler.append(kok)
+                else:
+                    temiz_kelimeler.append(kelime)
+            except:
+                temiz_kelimeler.append(kelime)
             
     return " ".join(temiz_kelimeler)
-# Veriyi temizle
-df['temiz_baslik'] = df['baslik'].apply(metin_on_isleme)
 
-print("--- Örnek Dönüşüm ---")
-print(f"Orijinal: {df['baslik'][0]}")
-print(f"İşlenmiş: {df['temiz_baslik'][0]}")
-print("-" * 30)
+# Tüm veri setine bu fonksiyonu uygula
+df['islenmis_veri'] = df['baslik'].apply(metni_temizle)
 
-# --- ADIM 3: TF-IDF VEKTÖRLEŞTİRME ---
-# Kelime Frekansı (BoW) ve Belge Frekansı (IDF) hesaplanıyor.
-tfidf_vectorizer = TfidfVectorizer()
+# 3. ADIM: ÖZELLİK ÇIKARIMI VE BÖLÜMLEME
+print("3. Yapay Zeka için veriler matematiğe dökülüyor (TF-IDF)...")
 
-# Modeli besleyeceğimiz X (Matematiksel Veri) ve y (Etiketler)
-X = tfidf_vectorizer.fit_transform(df['temiz_baslik'])
-y = df['etiket']
+tfidf = TfidfVectorizer(ngram_range=(1, 3), min_df=1, max_features=3000, token_pattern=r'(?u)\S+')
 
-# --- ADIM 4: MODEL EĞİTİMİ ---
+X = tfidf.fit_transform(df['islenmis_veri']) # Giriş verisi (Başlıklar)
+y = df['etiket'] # Çıkış verisi (0 veya 1)
+
+# Veriyi %80 Eğitim, %20 Test olarak ayır
+# stratify=y -> Eğitim ve test setinde clickbait oranını eşit tutar.
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-model = MultinomialNB() # Metin sınıflandırmada standart model
-#Naive Bayes algoritmasının bir türüdür. Özellikle metin sınıflandırma (bir kelime kaç kere geçmiş, puanı neymiş) gibi işlerde çok başarılıdır ve hızlıdır.
+# 4. ADIM: MODEL EĞİTİMİ (LOGISTIC REGRESSION)
+print(" 4. Model eğitiliyor...")
+
+# Naive Bayes yerine Logistic Regression kullanıyoruz.
+# Çünkü olasılık (yüzde kaç clickbait?) hesabında daha iyidir.
+model = LogisticRegression(random_state=42)
 model.fit(X_train, y_train)
 
-# --- ADIM 5: TEST VE TAHMİN ---
-# Modelin başarısı
+# Başarı Skorunu Hesapla
 y_pred = model.predict(X_test)
-print(f"Model Doğruluğu: {accuracy_score(y_test, y_pred)}\n")
+basari = accuracy_score(y_test, y_pred)
 
-# Yeni başlıklarla deneme yapalım
-yeni_basliklar = [
-    "Doktorlar bu kürü öneriyor, hemen deneyin!", # Clickbait olmalı
-    "Belediye otobüs sefer saatlerinde düzenleme yaptı." # Normal olmalı
-]
+print(f"\n EĞİTİM TAMAMLANDI!")
+print(f"Model Doğruluk Oranı: %{basari * 100:.2f}")
 
-print("--- TAHMİNLER ---")
-for baslik in yeni_basliklar:
-    temiz = metin_on_isleme(baslik) #temizleme
-    vektor = tfidf_vectorizer.transform([temiz]) #sayıya çevirme
-    sonuc = model.predict(vektor)[0] #tahmin etme
-    print(f"Başlık: {baslik}")
-    print(f"Tahmin: {sonuc}")
-    print("-" * 20)
+# Detaylı Rapor
+print("\n--- Detaylı Sınıflandırma Raporu ---")
+print(classification_report(y_test, y_pred, target_names=['Normal', 'Clickbait']))
 
-# --- ADIM 6: GÖRSELLEŞTİRME (Word Cloud) ---
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
+# 6. ADIM: İNTERAKTİF (CANLI) TEST MODU
+print("\n" + "="*60)
+print("SİSTEM HAZIR! (Çıkmak için 'q' yazın)")
+print("Örnek: 'Şok şok şok bu kürü deneyen yandı' veya 'Yarın hava güneşli'")
+print("="*60)
 
-# İki ayrı metin yığını oluşturuyoruz: Biri Clickbait'ler, biri Normaller için
-clickbait_metinleri = " ".join(df[df['etiket'] == 'CLICKBAIT']['temiz_baslik'])
-normal_metinleri = " ".join(df[df['etiket'] == 'NORMAL']['temiz_baslik'])
+while True:
+    giris = input("\n Başlık Girin: ")
+    
+    if giris.lower() in ['q', 'exit', 'çık']:
+        print("Güle güle!")
+        break
+        
+    if len(giris) < 5:
+        print("Lütfen biraz daha uzun bir cümle girin.")
+        continue
 
-# 1. Clickbait Bulutu (Kırmızı Tonlar)
-wc_clickbait = WordCloud(width=800, height=400, background_color='black', colormap='Reds').generate(clickbait_metinleri)
-
-# 2. Normal Haber Bulutu (Mavi Tonlar)
-wc_normal = WordCloud(width=800, height=400, background_color='white', colormap='Blues').generate(normal_metinleri)
-
-# Çizdirme Ayarları
-plt.figure(figsize=(14, 7))
-
-# Sol Taraf: Clickbait
-plt.subplot(1, 2, 1)
-plt.imshow(wc_clickbait, interpolation='bilinear')
-plt.title("CLICKBAIT KELİMELERİ (DİKKAT!)", fontsize=15, color='red')
-plt.axis('off')
-
-# Sağ Taraf: Normal
-plt.subplot(1, 2, 2)
-plt.imshow(wc_normal, interpolation='bilinear')
-plt.title("NORMAL HABER KELİMELERİ", fontsize=15, color='blue')
-plt.axis('off')
-
-# Ekrana bas
-plt.show()
+    # 1. Girilen veriyi temizle
+    temiz_giris = metni_temizle(giris)
+    
+    # 2. Vektöre çevir (Daha önce eğitilen tfidf'i kullan)
+    vektor = tfidf.transform([temiz_giris])
+    
+    # 3. Olasılık Hesapla (predict_proba)
+    # Model bize [Normal_Olasılığı, Clickbait_Olasılığı] şeklinde iki sayı verir.
+    olasiliklar = model.predict_proba(vektor)[0]
+    clickbait_ihtimali = olasiliklar[1] # 2. sıradaki değer (Clickbait olma ihtimali)
+    
+    # 4. Ekrana Yazdır
+    skor_yuzde = clickbait_ihtimali * 100
+    
+    print(f" Clickbait İhtimali: %{skor_yuzde:.1f}")
+    
+    if clickbait_ihtimali > 0.65:
+        print("🚨 SONUÇ: TIK TUZAĞI (CLICKBAIT) TESPİT EDİLDİ!")
+    else:
+        print("✅ SONUÇ: GÜVENLİ (NORMAL HABER)")
