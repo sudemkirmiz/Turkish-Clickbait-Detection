@@ -15,7 +15,6 @@ Sistemin önceki versiyonlarından en büyük farkı; sadece kelimelere değil, 
 * **🔗 N-Gram Analizi (1-3):** Kelimelere tek tek bakmak yerine 3'lü gruplar halinde bakar. (Örn: *"Şok"* kelimesi yerine *"Şok şok şok"* kalıbını ayırt eder).
 * **🇹🇷 Türkçe Stemming:** `TurkishStemmer` ile kelimeler köklerine indirgenir ancak özel kalıplar ve noktalama işaretleri korunur.
 * **🧠 Logistic Regression:** Olasılık tabanlı sınıflandırma ile daha kararlı sonuçlar üretir (`predict_proba` yeteneği sayesinde güven skoru verir).
-* **📊 Görsel Analiz:** Modelin performansını ölçmek için **Confusion Matrix (Hata Matrisi)** ısı haritası oluşturur.
 
 ## 🧰 Kullanılan Teknolojiler ve Kütüphaneler
 
