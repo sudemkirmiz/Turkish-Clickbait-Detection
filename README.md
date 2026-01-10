@@ -1,103 +1,131 @@
-# 🇹🇷 Turkish Clickbait Detection System (Türkçe Tık Tuzağı Tespit Sistemi)
+# 🇹🇷 Türkçe RAG (Retrieval-Augmented Generation) Asistanı
 
-![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
-![NLP](https://img.shields.io/badge/NLP-Natural_Language_Processing-green.svg)
-![Algorithm](https://img.shields.io/badge/Model-Logistic_Regression-orange.svg)
-![Status](https://img.shields.io/badge/Status-Active-success.svg)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![AI](https://img.shields.io/badge/AI-RAG-orange)
+![Ollama](https://img.shields.io/badge/LLM-Local-green)
 
-## 📌 Proje Tanımı
-Bu proje, Türkçe haber sitelerinde, sosyal medyada ve video platformlarında sıkça karşılaşılan **"Clickbait" (Tık Tuzağı)** başlıklarını tespit etmek amacıyla geliştirilmiş ileri seviye bir **Doğal Dil İşleme (NLP)** projesidir.
+Bu proje, **Doğal Dil İşleme (NLP)** ve **Üretken Yapay Zeka (Generative AI)** tekniklerini kullanarak, Türkçe dokümanlar (PDF) üzerinden soru-cevap yapabilen, yerel (local) çalışan akıllı bir asistandır.
 
-Sistemin önceki versiyonlarından en büyük farkı; sadece kelimelere değil, **cümlenin bağlamına (context)**, **kelime öbeklerine (n-grams)** ve **noktalama işaretlerinin kullanım şekline** (Örn: "!!!", "...") odaklanmasıdır. Model, bir dedektif gibi davranarak hem dil bilgisel hem de görsel ipuçlarını analiz eder.
+Proje, **YZT | MEVZUU** takımı kapsamında geliştirilmiştir.
 
-## ✨ Temel Özellikler (YENİ)
-* **🕵️‍♀️ Akıllı Noktalama Analizi:** Standart NLP süreçlerinin aksine, bu model noktalama işaretlerini silmez. Ünlem (`!`), üç nokta (`...`) ve soru işaretlerini (`?`) birer "duygu belirteci" olarak analiz eder.
-* **🔗 N-Gram Analizi (1-3):** Kelimelere tek tek bakmak yerine 3'lü gruplar halinde bakar. (Örn: *"Şok"* kelimesi yerine *"Şok şok şok"* kalıbını ayırt eder).
-* **🇹🇷 Türkçe Stemming:** `TurkishStemmer` ile kelimeler köklerine indirgenir ancak özel kalıplar ve noktalama işaretleri korunur.
-* **🧠 Logistic Regression:** Olasılık tabanlı sınıflandırma ile daha kararlı sonuçlar üretir (`predict_proba` yeteneği sayesinde güven skoru verir).
+## 🚀 Proje Hakkında
 
-## 🧰 Kullanılan Teknolojiler ve Kütüphaneler
+Bu sistem, klasik anahtar kelime aramasının ötesine geçerek **Anlamsal Arama (Semantic Search)** yapar. Kullanıcı bir soru sorduğunda, sistem dokümanı okur, sorunun cevabının bulunduğu paragrafı bulur ve **LLM (Büyük Dil Modeli)** kullanarak insan benzeri bir cevap üretir.
 
-| Teknoloji | Amaç |
-|---|---|
-| **Python** | Ana programlama dili |
-| **Scikit-learn** | Makine öğrenmesi (Logistic Regression, TF-IDF, Metrics) |
-| **NLTK** | Metin ön işleme (Tokenization, Stopwords) |
-| **TurkishStemmer** | Türkçe kelime köklerini bulma |
-| **Pandas** | Veri manipülasyonu ve yönetimi |
+### Temel Özellikler
+* **📄 Doküman İşleme:** PDF dosyalarını okuma ve parçalama.
+* **🧹 Gelişmiş Preprocessing:** Türkçe'ye özel Stemming (Kök bulma), Stop-word temizliği ve Tokenization.
+* **🧠 Vektör Veritabanı:** `ChromaDB` ve `Sentence Transformers` kullanılarak verilerin anlamsal olarak saklanması.
+* **🤖 RAG Mimarisi:** Retrieval (Bilgi Getirme) + Generation (Cevap Üretme) entegrasyonu.
+* **💬 Prompt Engineering:** Zero-shot, One-shot ve Few-shot tekniklerinin karşılaştırmalı uygulaması.
+* **🔒 Anti-Hallucination:** Modelin uydurmasını engelleyen "Grounding" mekanizması.
+
+---
+
+## 🛠️ Mimari ve Teknolojiler
+
+Proje 4 ana modülden oluşmaktadır:
+
+| Modül | Açıklama | Kullanılan Teknoloji |
+| :--- | :--- | :--- |
+| **NLP Motoru** | Metin temizleme ve kök bulma işlemleri. | `NLTK`, `TurkishStemmer` |
+| **Retrieval (Klasik)** | İstatistiksel kelime eşleştirme (Baseline). | `Scikit-learn (TF-IDF)` |
+| **Vector DB** | Metinleri vektör uzayına gömme ve anlamsal arama. | `ChromaDB`, `BERT (Turkish)` |
+| **Generator** | Cevap üretme ve akıl yürütme. | `Ollama`, `gpt-oss:120b-cloud` |
+
+---
 
 ## ⚙️ Kurulum ve Çalıştırma
 
-Projeyi yerel bilgisayarınızda çalıştırmak için aşağıdaki adımları sırasıyla izleyin:
+Projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları sırasıyla uygulayın.
 
-**1. Projeyi Bilgisayarınıza İndirin (Clone)**
-Terminali açın ve aşağıdaki komutu yazarak projeyi bilgisayarınıza çekin:
+### Ön Gereksinimler
+* Python 3.10 veya üzeri
+* Git
+* [Ollama](https://ollama.com/) (Yerel LLM sunucusu için)
+
+### 1. Depoyu Klonlayın
 ```bash
-git clone [https://github.com/sudemkirmiz/Turkish-Clickbait-Detection.git](https://github.com/sudemkirmiz/Turkish-Clickbait-Detection.git)
-cd Turkish-Clickbait-Detection
+git clone [https://github.com/uludagai-club/YZT-MEVZUU-2026.git](https://github.com/uludagai-club/YZT-MEVZUU-2026.git)
+cd YZT-MEVZUU-2026
 ```
-**2. Sanal Ortamı Oluşturun (Önerilen) Kütüphanelerin çakışmaması için sanal ortam (virtual environment) oluşturmanız tavsiye edilir:**
+### 2. Sanal Ortamı Kurun (Önerilen)
 ```bash
 # Windows için:
 python -m venv venv
 .\venv\Scripts\activate
-```
-```bash
+
 # Mac/Linux için:
 python3 -m venv venv
 source venv/bin/activate
 ```
-**3. Gerekli Kütüphaneleri Yükleyin Projenin çalışması için gereken paketleri yükleyin:**
+### 3. Kütüphaneleri Yükleyin
 ```bash
 pip install -r requirements.txt
-# Veya manuel olarak:
-pip install pandas numpy nltk TurkishStemmer scikit-learn
 ```
-**4. Uygulamayı Çalıştırın Kurulum tamamlandıktan sonra projeyi başlatın:**
+### 4. Ollama Modelini Hazırlayın
+Projenin kullandığı modeli yerel sunucunuza çekin:
+```bash
+ollama pull gpt-oss:120b-cloud
+```
+(Eğer bu özel model erişilebilir değilse, ollama pull llama3 veya gemma komutlarını kullanabilir ve kodda model ismini güncelleyebilirsiniz.)
+
+## ▶️ Kullanım
+
+Proje iki aşamada çalışır: **Öğrenme** ve **Sorgulama**.
+
+### Adım 1: Hafızayı Oluşturma (İndeksleme)
+PDF dosyasını analiz edip Vektör Veritabanına kaydetmek için:
+```bash
+python vector_db.py
+```
+(Bu işlem sadece yeni bir PDF eklendiğinde bir kez yapılır.)
+
+### Adım 2: Asistanı Başlatma
+Sistemi interaktif modda çalıştırmak için:
 ```bash
 python main.py
 ```
+Program açıldığında sorularınızı yöneltebilir ve Zero-shot / Few-shot modları arasında seçim yapabilirsiniz.
 
-## 🧠 Nasıl Çalışır? (Teknik İş Akışı)
+## 📊 Deneysel Sonuçlar ve Gözlemler
 
-Proje, metni ham halden alıp sonuca ulaştırmak için aşağıdaki "Pipeline" (Boru Hattı) adımlarını izler:
+Proje geliştirme sürecinde yapılan testlerde (Örn: *Küçük Prens* kitabı üzerinde) şu kritik gözlemler yapılmıştır:
 
-1.  **Veri Yükleme:** `clickbait_dataset.csv` dosyasından haber başlıkları ve etiketleri (0: Normal, 1: Clickbait) yüklenir.
-2.  **Akıllı Ön İşleme (Smart Preprocessing):**
-    * Metin küçük harfe çevrilir.
-    * Etkisiz kelimeler (Stop Words) temizlenir.
-    * **ÖNEMLİ:** Standart temizliğin aksine, ünlem (`!`), soru işareti (`?`) ve üç nokta (`...`) **silinmez**, korunur.
-    * Kelimeler `TurkishStemmer` ile köklerine indirgenir.
-3.  **Vektörleştirme (TF-IDF):**
-    * Metinler matematiksel vektörlere dönüştürülür.
-    * `token_pattern=r'(?u)\S+'` ayarı ile noktalama işaretleri de birer kelime gibi işlenir.
-    * `ngram_range=(1, 3)` kullanılarak kelime grupları (Örn: "şok şok şok") analiz edilir.
-4.  **Model Eğitimi:** `Logistic Regression` algoritması, verideki bu desenleri ve olasılıkları öğrenir.
-5.  **Canlı Test:** Kullanıcıdan alınan metin aynı işlemlerden geçirilip % (yüzde) olasılık skoru ile değerlendirilir.
+1.  **Anlamsal Arama Başarısı (Semantic Search):**
+    * Klasik TF-IDF yöntemi kelime eşleşmesine dayalı olduğu için "duygusal bağ" sorgusunda sonuç veremezken, geliştirdiğimiz **Embedding tabanlı RAG mimarisi** bu sorguyu kitabın "evcilleştirmek" (bağ kurmak) ile ilgili bölümüyle (Sayfa 62) başarıyla eşleştirmiştir.
 
-## 📊 Örnek Senaryolar
+2.  **Prompt Tekniklerinin Etkisi:**
+    * **Zero-shot:** Model daha özgür, detaylı ve edebi bir dil kullanma eğilimindedir. (Örn: Tilki'nin sırrını açıklarken metaforlar kullanması).
+    * **One-shot / Few-shot:** Modele örnek verildiğinde cevaplar daha yapılandırılmış, net ve doğrudan sonuca odaklı hale gelmiştir.
 
-Yeni modelin "noktalama duyarlılığı" ve "bağlam analizi" sayesinde yakaladığı bazı kritik farklar aşağıdadır:
+3.  **Halüsinasyon Engelleme (Anti-Hallucination):**
+    * Sisteme veri setinde bulunmayan tuzak sorular (Örn: *"Küçük Prens İstanbul'a ne zaman gitti?"*) sorulduğunda, model dış dünyadaki bilgilerini karıştırmadan **"Metinde bu bilgi yer almamaktadır"** yanıtını vermiştir. Bu, `main.py` içindeki sistem prompt'unun ("Sadece verilen metne bağlı kal") başarıyla çalıştığını kanıtlar.
 
-| Haber Başlığı | Tahmin | Neden? |
-|---|---|---|
-| *"Doktorlar bu kürü öneriyor..."* | 🔴 **CLICKBAIT** | "Bu kür" kelimesi ve "..." (merak boşluğu) kullanımı tespit edildi. |
-| *"Böyle kar görülmedi!!"* | 🔴 **CLICKBAIT** | Aşırı ünlem (`!!`) kullanımı yapay heyecan olarak algılandı. |
-| *"Böyle kar görülmedi"* | 🔵 **NORMAL** | Aynı cümle, noktalama normal olduğu için güvenli bulundu. |
-| *"Merkez Bankası faiz kararını açıkladı."* | 🔵 **NORMAL** | Bilgi verici, duygusal manipülasyon yok. |
-| *"Sakın çöpe atmayın! Meğer..."* | 🔴 **CLICKBAIT** | "Sakın", "Meğer" kelimeleri ve ünlem kombinasyonu yakalandı. |
+4.  **Muhakeme (Reasoning) Yeteneği:**
+    * Karmaşık tarihsel anlatımlarda (Örn: Gökbilimcinin keşif tarihi 1909 vs 1920), Zero-shot tekniğinin bazen detayları karıştırabildiği, ancak Few-shot tekniği ile modelin dikkatinin arttırılabildiği gözlemlenmiştir.
 
-> **Not:** Model, %65 ve üzeri olasılık değerlerini "Clickbait" olarak işaretleyecek şekilde hassas ayarlanmıştır.
-
-## 📂 Klasör Yapısı
+## 📂 Proje Yapısı
 
 ```text
-Turkish-Clickbait-Detection/
-├── assets/
-│   └── wordcloud.png    # Proje çıktısı (Kelime Bulutu görseli)
-├── main.py              # Projenin ana kaynak kodu
-├── requirements.txt     # Gerekli kütüphane listesi
-├── .gitignore           # Gereksiz dosyaların yüklenmesini engeller
-└── README.md            # Proje dokümantasyonu
+YZT_RAG_PROJE/
+├── 📂 chroma_db/        # Oluşturulan Vektör Veritabanı (Otomatik oluşur)
+├── 📂 venv/             # Python Sanal Ortam klasörü
+├── 📂 __pycache__/      # Python derleme önbelleği (Otomatik oluşur)
+├── 📄 .gitignore        # Git tarafından yok sayılacak dosyalar
+├── 📄 kucuk_prens.pdf   # Analiz edilen kaynak PDF dokümanı
+├── 📄 main.py           # PROJE GİRİŞİ: RAG Asistanı ve LLM sorgulama kodu
+├── 📄 pdf_search.py     # Klasik TF-IDF arama motoru (Baz karşılaştırma için)
+├── 📄 preprocessing.py  # Türkçe NLP kütüphanesi (Stemming ve temizlik işlemleri)
+├── 📄 README.md         # Proje raporu ve kullanım dokümanı
+├── 📄 requirements.txt  # Gerekli Python kütüphaneleri listesi
+└── 📄 vector_db.py      # Embedding ve vektör veritabanı kurulum kodu
 ```
->Geliştirici: Sudem Kırmız. Bu proje NLP öğrenim sürecimin bir parçası olarak geliştirilmiştir
+
+---
+
+## 📧 İletişim
+
+**Geliştirici:** Sudem Kırmız
+**Takım:** YZT | MEVZUU
+**GitHub:** [https://github.com/sudemkirmiz](https://github.com/sudemkirmiz)
