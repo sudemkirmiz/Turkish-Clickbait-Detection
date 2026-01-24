@@ -90,7 +90,6 @@ Yeni modelin "noktalama duyarlılığı" ve "bağlam analizi" sayesinde yakalad�
 
 > **Not:** Model, %65 ve üzeri olasılık değerlerini "Clickbait" olarak işaretleyecek şekilde hassas ayarlanmıştır.
 
-## 📂 Klasör Yapısı
 
 ## 📂 Klasör Yapısı
 
